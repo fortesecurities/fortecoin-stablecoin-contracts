@@ -4,19 +4,19 @@ pragma solidity ^0.8.20;
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {ContextUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 
-contract BlacklistableUpgradable is Initializable, ContextUpgradeable {
-    /// @custom:storage-location erc7201:fortesecurities.BlacklistableUpgradable
-    struct BlacklistableUpgradableStorage {
+contract BlacklistableUpgradeable is Initializable, ContextUpgradeable {
+    /// @custom:storage-location erc7201:fortesecurities.BlacklistableUpgradeable
+    struct BlacklistableUpgradeableStorage {
         mapping(address => bool) blacklisted;
     }
 
-    // keccak256(abi.encode(uint256(keccak256("fortesecurities.BlacklistableUpgradable")) - 1)) & ~bytes32(uint256(0xff))
-    bytes32 private constant BlacklistableUpgradableStorageLocation =
-        0x8ecc1f59a42058624dce41c94b4f8aa95e42142a4f40b370d396f94cbf8ede00;
+    // keccak256(abi.encode(uint256(keccak256("fortesecurities.BlacklistableUpgradeable")) - 1)) & ~bytes32(uint256(0xff))
+    bytes32 private constant BlacklistableUpgradeableStorageLocation =
+        0x5e0ff3240a99a47c7048588bdf28d8ba221704144a1e0d3f41eececcdf2a1700;
 
-    function _getBlacklistableUpgradableStorage() private pure returns (BlacklistableUpgradableStorage storage $) {
+    function _getBlacklistableUpgradeableStorage() private pure returns (BlacklistableUpgradeableStorage storage $) {
         assembly {
-            $.slot := BlacklistableUpgradableStorageLocation
+            $.slot := BlacklistableUpgradeableStorageLocation
         }
     }
 
@@ -31,12 +31,12 @@ contract BlacklistableUpgradable is Initializable, ContextUpgradeable {
     /**
      * @dev Emitted when an `account` is blacklisted.
      */
-    event Blacklist(address account);
+    event Blacklist(address indexed account);
 
     /**
      * @dev Emitted when an `account` is removed from the blacklist.
      */
-    event UnBlacklist(address account);
+    event UnBlacklist(address indexed account);
 
     /**
      * @dev Throws if argument account is blacklisted
@@ -54,7 +54,7 @@ contract BlacklistableUpgradable is Initializable, ContextUpgradeable {
      * @param account The address to check
      */
     function isBlacklisted(address account) public view returns (bool) {
-        BlacklistableUpgradableStorage storage $ = _getBlacklistableUpgradableStorage();
+        BlacklistableUpgradeableStorage storage $ = _getBlacklistableUpgradeableStorage();
         return $.blacklisted[account];
     }
 
@@ -63,7 +63,7 @@ contract BlacklistableUpgradable is Initializable, ContextUpgradeable {
      * @param account The address to blacklist
      */
     function _blacklist(address account) internal virtual {
-        BlacklistableUpgradableStorage storage $ = _getBlacklistableUpgradableStorage();
+        BlacklistableUpgradeableStorage storage $ = _getBlacklistableUpgradeableStorage();
         $.blacklisted[account] = true;
         emit Blacklist(account);
     }
@@ -73,7 +73,7 @@ contract BlacklistableUpgradable is Initializable, ContextUpgradeable {
      * @param account The address to remove from the blacklist
      */
     function _unBlacklist(address account) internal virtual {
-        BlacklistableUpgradableStorage storage $ = _getBlacklistableUpgradableStorage();
+        BlacklistableUpgradeableStorage storage $ = _getBlacklistableUpgradeableStorage();
         $.blacklisted[account] = false;
         emit UnBlacklist(account);
     }

@@ -1,23 +1,29 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {ContextUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 import {ERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import {ERC20PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PausableUpgradeable.sol";
 import {ERC20PermitUpgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol";
-import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import {ERC20BlacklistableUpgradable} from "./ERC20BlacklistableUpgradable.sol";
+import {ERC20BlacklistableUpgradeable} from "./ERC20BlacklistableUpgradeable.sol";
 import {ExtendedAccessControlUpgradeable} from "./ExtendedAccessControlUpgradeable.sol";
 
 contract Stablecoin is
-    Initializable, // Used for contract initialization purposes.
-    ContextUpgradeable, // Provides basic functionality from the Context contract.
     ERC20Upgradeable, // Represents an upgradeable ERC20 token.
     ERC20PausableUpgradeable, // Provides functionality to pause and unpause the contract.
     ExtendedAccessControlUpgradeable, // Manages access roles for the contract.
     ERC20PermitUpgradeable, // ERC20 token with a permit function (off-chain approval).
-    ERC20BlacklistableUpgradable // Allows certain addresses to be blacklisted.
+    ERC20BlacklistableUpgradeable // Allows certain addresses to be blacklisted.
 {
+    /**
+     * @dev Emitted when an `amount` of tokens is minted to a specific `account`.
+     */
+    event Mint(address indexed account, uint256 amount);
+
+    /**
+     * @dev Emitted when an `amount` of tokens is burned from a specific `account`.
+     */
+    event Burn(address indexed account, uint256 amount);
+
     // Define constants for various roles using the keccak256 hash of the role names.
     bytes32 public constant BLACKLIST_ROLE = keccak256("BLACKLIST_ROLE");
     bytes32 public constant BURN_ROLE = keccak256("BURN_ROLE");
@@ -95,7 +101,7 @@ contract Stablecoin is
      * @param _amount Amount of tokens to mint.
      */
     function mint(uint256 _amount) public onlyRole(MINT_ROLE) {
-        _mint(_msgSender(), _amount);
+        mint(_msgSender(), _amount);
     }
 
     /**
@@ -106,6 +112,7 @@ contract Stablecoin is
      */
     function mint(address _account, uint256 _amount) public onlyRole(MINT_ROLE) {
         _mint(_account, _amount);
+        emit Mint(_account, _amount);
     }
 
     /**
@@ -114,7 +121,7 @@ contract Stablecoin is
      * @param _amount Amount of tokens to burn.
      */
     function burn(uint256 _amount) public onlyRole(BURN_ROLE) {
-        _burn(_msgSender(), _amount);
+        burn(_msgSender(), _amount);
     }
 
     /**
@@ -124,8 +131,11 @@ contract Stablecoin is
      * @param _amount Amount of tokens to burn.
      */
     function burn(address _account, uint256 _amount) public onlyRole(BURN_ROLE) {
-        _spendAllowance(_account, _msgSender(), _amount);
+        if (_account != _msgSender()) {
+            _spendAllowance(_account, _msgSender(), _amount);
+        }
         _burn(_account, _amount);
+        emit Burn(_account, _amount);
     }
 
     // The following functions are overrides required by Solidity.
@@ -133,7 +143,7 @@ contract Stablecoin is
         address from,
         address to,
         uint256 value
-    ) internal override(ERC20Upgradeable, ERC20PausableUpgradeable, ERC20BlacklistableUpgradable) {
+    ) internal override(ERC20Upgradeable, ERC20PausableUpgradeable, ERC20BlacklistableUpgradeable) {
         super._update(from, to, value);
     }
 }
